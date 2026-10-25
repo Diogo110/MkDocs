@@ -1,0 +1,42 @@
+[
+  {
+    "src": "assets/photos/acores.jpg",
+    "titulo": "Azorean coast",
+    "categoria": "Nature",
+    "local": "Azores",
+    "camera": "",
+    "formato": "big"
+  },
+  {
+    "src": "assets/photos/car.jpg",
+    "titulo": "Vintage car",
+    "categoria": "Street",
+    "local": "",
+    "camera": "",
+    "formato": "tall"
+  },
+  {
+    "src": "assets/photos/guima.jpg",
+    "titulo": "Valley at sunset",
+    "categoria": "Nature",
+    "local": "Guimarães",
+    "camera": "",
+    "formato": "tall"
+  },
+  {
+    "src": "assets/photos/cat.jpg",
+    "titulo": "Sleeping cat",
+    "categoria": "Animals",
+    "local": "",
+    "camera": "",
+    "formato": "tall"
+  },
+  {
+    "src": "assets/photos/cat2.jpg",
+    "titulo": "Sleeping cat II",
+    "categoria": "Animals",
+    "local": "",
+    "camera": "",
+    "formato": ""
+  }
+]

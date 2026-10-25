@@ -1,0 +1,42 @@
+site_name: "Diogo's Portfolio"
+site_description: Junior developer portfolio
+
+theme:
+  name: material
+  custom_dir: custom_theme
+  features:
+    - navigation.tabs
+    - navigation.top
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Modo escuro
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Modo claro
+
+markdown_extensions:
+  - attr_list # permite { align=right width=220 } nas imagens
+
+nav:
+  - Home: index.md
+  - About: about.md
+  - Projects: projects.md
+  - Music: music.md
+  - Photography: photography.md
+
+extra_css:
+  - css/extra.css
+  - css/music.css
+
+extra_javascript:
+  - js/extra.js
+  - js/spotify.js
+  - js/gallery.js

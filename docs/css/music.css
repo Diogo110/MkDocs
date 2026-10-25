@@ -1,0 +1,143 @@
+/* Estilos da página Music. Usa as variáveis --card-bg, --card-borda e --suave definidas em extra.css */
+
+.music-intro { font-size: 1.05rem; }                 /* frase de abertura um pouco maior */
+.music-note { margin-top: 2rem; font-size: 0.7rem; color: var(--suave); } /* nota final: pequena, cinzenta, afastada de cima */
+.subtitle { margin: 0 0 0.4rem; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--suave); } /* mini-título das colunas */
+
+/* ---------- cartões de números ---------- */
+.stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); gap: 0.6rem; margin: 1rem 0; } /* grelha: tantas colunas quantas couberem; min(...,100%) evita sair do ecrã */
+.stat-card { background: var(--card-bg); border: 1px solid var(--card-borda); border-radius: 12px; padding: 0.7rem 0.9rem; transition: transform 0.2s, border-color 0.2s; } /* caixa com fundo, borda e cantos redondos */
+.stat-card:hover { transform: translateY(-3px); border-color: var(--md-accent-fg-color); } /* ao passar o rato: sobe 3px e a borda ganha cor */
+.stat-card strong { display: block; font-size: 1.45rem; line-height: 1.1; white-space: nowrap; color: var(--md-accent-fg-color); font-variant-numeric: tabular-nums; } /* número grande, na cor de destaque, com dígitos alinhados */
+.stat-card span { font-size: 0.7rem; color: var(--suave); } /* legenda pequena e cinzenta */
+.stat-cards--small strong { font-size: 1.2rem; }     /* variante mais pequena (secção Habits) */
+
+/* ---------- donuts (skip e shuffle) ---------- */
+.donut { display: flex; align-items: center; gap: 0.7rem; } /* círculo à esquerda, texto à direita */
+.donut svg { width: 52px; flex: none; }              /* tamanho fixo do círculo; "flex: none" impede que encolha */
+.donut__track { fill: none; stroke: color-mix(in srgb, var(--md-default-fg-color) 10%, transparent); stroke-width: 7; } /* anel cinzento de fundo */
+.donut__value { fill: none; stroke: var(--md-accent-fg-color); stroke-width: 7; stroke-linecap: round; } /* anel colorido por cima, com pontas redondas */
+.donut__value { stroke-dasharray: var(--c); stroke-dashoffset: var(--c); } /* começa "vazio": o traço está todo deslocado para fora */
+.donut__value { transform: rotate(-90deg); transform-origin: 32px 32px; transition: stroke-dashoffset 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); } /* começa no topo (12h) e anima suavemente */
+.donut.in .donut__value { stroke-dashoffset: calc(var(--c) * (1 - var(--p) / 100)); } /* ao aparecer, "enche" até à percentagem --p */
+
+/* ---------- gráfico de área (timeline) ---------- */
+.timeline svg { display: block; width: 100%; height: auto; overflow: visible; } /* o SVG ocupa a largura toda e ajusta a altura */
+.timeline__line { fill: none; stroke: var(--md-accent-fg-color); stroke-width: 2.2; stroke-linejoin: round; } /* a linha: sem preenchimento, na cor de destaque */
+.timeline__line { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.8s ease; } /* começa "por desenhar" (pathLength=1 no JS) */
+.timeline.in .timeline__line { stroke-dashoffset: 0; } /* ao aparecer, a linha desenha-se da esquerda para a direita */
+.timeline__area { opacity: 0; transition: opacity 1.2s ease 0.6s; } /* a sombra por baixo começa invisível e surge depois da linha */
+.timeline.in .timeline__area { opacity: 1; }         /* ao aparecer, fica visível */
+.timeline__axis { stroke: color-mix(in srgb, var(--md-default-fg-color) 25%, transparent); } /* linha de base, discreta */
+.timeline text { font-size: 9px; fill: var(--suave); text-anchor: middle; } /* anos no eixo: pequenos, cinzentos, centrados */
+.timeline__zones rect { fill: transparent; }         /* colunas invisíveis que captam o rato (e mostram o tooltip) */
+.timeline__zones rect:hover { fill: color-mix(in srgb, var(--md-accent-fg-color) 18%, transparent); } /* destaca a coluna sob o rato */
+.timeline__note { margin: 0.2rem 0 0; font-size: 0.7rem; color: var(--suave); } /* frase por baixo do gráfico */
+
+/* ---------- duas colunas: artistas | músicas ---------- */
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; } /* duas colunas iguais */
+@media (max-width: 700px) { .duo { grid-template-columns: 1fr; } } /* em ecrãs estreitos (telemóvel) fica uma coluna só */
+
+/* ---------- barras dos artistas ---------- */
+.rank { display: grid; grid-template-columns: 1.4rem 1fr; gap: 0.5rem; align-items: center; margin: 0.45rem 0; } /* número | conteúdo */
+.rank__num { font-size: 1.1rem; font-weight: 700; text-align: right; color: var(--suave); } /* número da posição, à direita */
+.rank--top .rank__num, .rank--top .rank__row b { color: var(--md-accent-fg-color); } /* o nº 1 fica na cor de destaque */
+.rank--top .rank__row b { font-size: 1.05rem; }      /* e o nome do nº 1 é um pouco maior */
+.rank__row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.78rem; } /* nome à esquerda, horas à direita */
+.rank__row span { color: var(--suave); font-variant-numeric: tabular-nums; } /* horas em cinzento */
+.rank__bar { height: 8px; margin-top: 3px; border-radius: 6px; overflow: hidden; background: color-mix(in srgb, var(--md-default-fg-color) 8%, transparent); } /* calha cinzenta da barra */
+.rank__bar i { display: block; width: 0; height: 100%; border-radius: 6px; background: linear-gradient(90deg, color-mix(in srgb, var(--md-accent-fg-color) 55%, transparent), var(--md-accent-fg-color)); } /* barra: começa com largura 0 e tem gradiente */
+.rank__bar i { transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i, 0) * 55ms + 150ms); } /* anima a largura, cada linha um pouco depois da anterior */
+.rank.in .rank__bar i { width: var(--w); }           /* ao aparecer, cresce até à largura --w definida no JS */
+
+/* ---------- lista de músicas ---------- */
+.tracks { list-style: none; margin: 0; padding: 0; counter-reset: track; } /* lista sem bolinhas, com contador próprio */
+.tracks li { counter-increment: track; display: flex; justify-content: space-between; align-items: center; gap: 0.7rem; margin: 0.25rem 0; padding: 0.4rem 0.7rem; border-radius: 10px; border: 1px solid transparent; background: var(--card-bg); } /* cada música é uma caixa */
+.tracks li:hover { border-color: var(--card-borda); } /* ao passar o rato aparece uma borda subtil */
+.tracks li::before { content: counter(track); min-width: 1.2rem; font-weight: 700; color: var(--suave); } /* escreve 1, 2, 3... antes de cada música */
+.tracks__name { flex: 1; display: flex; flex-direction: column; font-size: 0.78rem; font-weight: 600; } /* nome em cima, artista por baixo */
+.tracks small { font-size: 0.66rem; font-weight: 400; color: var(--suave); } /* artista: mais pequeno e cinzento */
+.tracks__plays { font-weight: 700; text-align: right; color: var(--md-accent-fg-color); font-variant-numeric: tabular-nums; } /* nº de plays à direita, em destaque */
+
+/* ---------- colunas por ano ---------- */
+.years { display: flex; align-items: flex-end; gap: 0.5rem; padding: 0.4rem 0 0.6rem; } /* colunas lado a lado, alinhadas pela base */
+.year { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 0.7rem; } /* cada ano ocupa a mesma largura */
+.year__hours { color: var(--suave); font-variant-numeric: tabular-nums; } /* horas por cima da coluna */
+.year__column { display: flex; align-items: flex-end; width: 100%; height: 120px; margin: 4px 0; } /* "caixa" de 120px onde a coluna cresce de baixo para cima */
+.year__column i { display: block; width: 100%; height: 0; border-radius: 8px 8px 2px 2px; background: linear-gradient(180deg, var(--md-accent-fg-color), color-mix(in srgb, var(--md-accent-fg-color) 35%, transparent)); } /* coluna com gradiente, começa com altura 0 */
+.year__column i { transition: height 1s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i, 0) * 70ms), filter 0.2s; } /* anima a altura, em cascata */
+.year.in .year__column i { height: max(var(--h), 3px); } /* ao aparecer, cresce até --h (mínimo 3px para anos quase vazios) */
+.year:hover .year__column i, .year:focus-visible .year__column i { filter: brightness(1.2); } /* rato ou teclado em cima: fica mais brilhante */
+.year small { font-size: 0.55rem; line-height: 1.2; color: var(--suave); overflow-wrap: anywhere; } /* nome do artista do ano, pequenino */
+
+/* ---------- mapa de calor ---------- */
+/* Regra de ouro: NADA aqui tem overflow (nem auto, nem hidden). As colunas usam minmax(0, 1fr), por isso o mapa
+   encolhe até caber em qualquer ecrã, e o quadrado cresce com transform (que não muda o layout), logo não há scrollbars. */
+.heatmap { --gap: 3px; }                             /* espaço entre quadrados (usado nas linhas e na grelha) */
+.heatmap__grid { display: grid; gap: var(--gap); }   /* as 8 linhas (cabeçalho + 7 dias) */
+.heatmap__row { display: grid; grid-template-columns: 2.2rem repeat(24, minmax(0, 1fr)) 3rem; gap: var(--gap); align-items: center; } /* dia | 24 horas | total do dia */
+.heatmap__hour, .heatmap__day, .heatmap__total, .heatmap__total-head { font-size: 0.6rem; color: var(--suave); white-space: nowrap; transition: color 0.15s, opacity 0.15s; } /* textos pequenos à volta do mapa */
+.heatmap__hour { justify-self: center; }             /* o número fica centrado por cima da sua coluna */
+.heatmap__hour--quiet { opacity: 0; }                /* só de 3 em 3 horas ficam visíveis, para não apinhar... */
+.heatmap__total, .heatmap__total-head { text-align: right; font-variant-numeric: tabular-nums; } /* total do dia alinhado à direita */
+.heatmap__cell { aspect-ratio: 1; border-radius: 3px; background: color-mix(in srgb, var(--md-accent-fg-color) var(--p), transparent); } /* quadrado; a cor depende de --p */
+.heatmap__cell { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s; } /* o crescimento tem um pequeno "ressalto" no fim */
+.heatmap__cell:hover, .heatmap__cell.is-active { transform: scale(1.75); z-index: 2; box-shadow: 0 0 0 1.5px var(--md-default-fg-color), 0 6px 14px rgba(0, 0, 0, 0.35); } /* o quadrado cresce POR CIMA dos vizinhos, com contorno e sombra */
+.heatmap__day.is-hot, .heatmap__hour.is-hot { color: var(--md-accent-fg-color); font-weight: 700; } /* o dia e a hora do quadrado escolhido ficam em destaque... */
+.heatmap__hour--quiet.is-hot { opacity: 1; }         /* ...mesmo as horas que estavam escondidas */
+
+.heatmap .heatmap__cell { opacity: 0; }              /* quadrados escondidos até o mapa aparecer no ecrã */
+@keyframes heatmap-pop { from { opacity: 0; transform: scale(0.2); } } /* entrada: nascem pequeninos e crescem */
+.heatmap.in .heatmap__cell { opacity: 1; animation: heatmap-pop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) var(--delay, 0ms) backwards; } /* --delay (do JS) faz a onda na diagonal */
+
+.heatmap__info { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 1.5rem; margin-top: 0.9rem; } /* linha de detalhe à esquerda, legenda à direita */
+.heatmap__readout { font-size: 0.78rem; min-height: 1.3em; } /* frase com o valor do quadrado escolhido */
+.heatmap__readout b { color: var(--md-accent-fg-color); } /* "Mon, 16:00-17:00" na cor de destaque */
+.heatmap__legend { display: flex; align-items: center; gap: 0.5rem; font-size: 0.65rem; color: var(--suave); font-variant-numeric: tabular-nums; } /* "0 min [barra] 57 min" */
+.heatmap__scale { display: block; width: 120px; height: 10px; border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--md-accent-fg-color) 5%, transparent), var(--md-accent-fg-color)); } /* barra de cores: do mais fraco ao mais forte */
+.md-typeset .heatmap__summary { margin: 0.7rem 0 0; font-size: 0.72rem; color: var(--suave); } /* frase com hora de pico (".md-typeset" para ganhar às margens normais dos parágrafos) */
+
+@media (max-width: 600px) {                          /* telemóvel: tira a coluna dos totais para os quadrados terem mais espaço */
+  .heatmap__row { grid-template-columns: 2rem repeat(24, minmax(0, 1fr)); }
+  .heatmap__total, .heatmap__total-head { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {            /* quem pediu "menos animações": sem entrada nem crescimento, só contorno */
+  .heatmap .heatmap__cell { opacity: 1; animation: none !important; transition: none; }
+  .heatmap__cell:hover, .heatmap__cell.is-active { transform: none; box-shadow: inset 0 0 0 2px var(--md-default-fg-color); }
+}
+
+/* ---------- playlists ---------- */
+.playlists { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 1rem; } /* cartões lado a lado quando couberem; min(...,100%) evita scroll horizontal em ecrãs muito estreitos */
+.playlist { border: 1px solid var(--card-borda); border-radius: 16px; overflow: hidden; background: var(--card-bg); transition: transform 0.2s, border-color 0.2s; } /* caixa do cartão */
+.playlist:hover { transform: translateY(-3px); border-color: var(--md-accent-fg-color); } /* ao passar o rato: sobe 3px e a borda ganha cor */
+.playlist__cover { position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: flex-end; gap: 1rem; min-height: 150px; padding: 1rem; color: #fff; background: linear-gradient(135deg, hsl(var(--hue) 60% 36%), hsl(calc(var(--hue) + 40) 65% 20%)); } /* faixa colorida; --hue (matiz) vem do JS e é diferente em cada cartão */
+.playlist__cover::before { content: ""; position: absolute; inset: -30px; z-index: -2; background: var(--art, none) center / cover; filter: blur(26px) saturate(1.5); opacity: 0; transition: opacity 0.6s; } /* a capa, muito desfocada, como fundo (começa invisível) */
+.playlist.has-art .playlist__cover::before { opacity: 0.85; } /* quando a capa chega, o fundo desfocado aparece */
+.playlist__cover::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.1)); } /* sombra por cima do fundo: o texto branco lê-se sempre bem */
+.playlist__art { flex: none; width: 104px; aspect-ratio: 1; overflow: hidden; border-radius: 12px; background: linear-gradient(135deg, hsl(var(--hue) 65% 48%), hsl(calc(var(--hue) + 50) 70% 28%)); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45); transition: transform 0.3s; } /* o quadrado da capa, com sombra */
+.playlist:hover .playlist__art { transform: scale(1.04) rotate(-1.5deg); } /* ao passar o rato, a capa inclina-se um bocadinho */
+.playlist__art img, .playlist__art svg { display: block; width: 100%; height: 100%; object-fit: cover; } /* imagem ou vinil enchem o quadrado */
+.vinyl__disc, .vinyl__hole { fill: hsl(0 0% 7%); }   /* disco preto */
+.vinyl__groove { fill: none; stroke: #fff; stroke-opacity: 0.09; stroke-width: 0.6; } /* sulcos finos */
+.vinyl__label { fill: hsl(calc(var(--hue) + 25) 85% 60%); } /* rótulo central, na cor da playlist */
+.vinyl__shine { fill: #fff; fill-opacity: 0.08; }    /* reflexo de luz */
+.playlist:hover .vinyl { animation: vinyl-spin 6s linear infinite; } /* o vinil roda enquanto o rato estiver no cartão */
+@keyframes vinyl-spin { to { transform: rotate(360deg); } }
+.playlist__text { flex: 1; min-width: 0; }           /* deixa o texto encolher em vez de empurrar a capa */
+.playlist__title { display: block; font-size: 1.05rem; line-height: 1.2; } /* nome da playlist */
+.playlist__desc { margin: 0.25rem 0 0; font-size: 0.7rem; opacity: 0.85; } /* descrição, mais pequena */
+.playlist__tracks { display: inline-block; margin-top: 0.5rem; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.62rem; white-space: nowrap; background: rgba(0, 0, 0, 0.35); } /* pílula com o nº de faixas */
+.playlist__body { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.7rem 1rem; } /* botão à esquerda, link à direita */
+.playlist__button { cursor: pointer; border: 0; border-radius: 999px; padding: 0.4rem 1rem; font: inherit; font-size: 0.72rem; font-weight: 700; color: #fff; background: var(--md-accent-fg-color); transition: filter 0.2s, transform 0.2s; } /* botão redondo na cor de destaque */
+[data-md-color-scheme="slate"] .playlist__button { color: #04201c; } /* no modo escuro o destaque é claro, por isso o texto fica escuro */
+.playlist__button:hover { filter: brightness(1.12); transform: scale(1.04); } /* ao passar o rato: mais brilho e ligeiro zoom */
+.md-typeset .playlist__link { font-size: 0.7rem; color: var(--suave); } /* link discreto (".md-typeset" para ganhar à cor normal dos links) */
+.md-typeset .playlist__link:hover { color: var(--md-accent-fg-color); } /* ao passar o rato fica na cor de destaque */
+.playlist__player { padding: 0 0.7rem 0.7rem; }      /* espaço à volta do leitor */
+.playlist__player iframe { display: block; width: 100%; height: 352px; border: 0; border-radius: 12px; } /* leitor do Spotify, arredondado */
+
+/* ---------- utilizadores que pediram "menos animações" ---------- */
+@media (prefers-reduced-motion: reduce) {            /* desliga as animações */
+  .timeline__line, .timeline__area, .donut__value, .rank__bar i, .year__column i, .playlist, .playlist__button, .playlist__art, .playlist__cover::before { transition: none; }
+  .playlist:hover .vinyl { animation: none; }
+}

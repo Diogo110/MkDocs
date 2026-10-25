@@ -1,0 +1,292 @@
+/* Modo claro */
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #1e293b;
+  --md-primary-fg-color--light: #334155;
+  --md-primary-fg-color--dark: #0f172a;
+  --md-accent-fg-color: #0f766e;
+  --md-typeset-a-color: #0f766e;
+}
+
+/* ================== MODO ESCURO (slate) ================== */
+[data-md-color-scheme="slate"] {
+  /* fundos */
+  --md-default-bg-color: #0b1120;            /* fundo da página: azul-marinho muito escuro */
+  --md-footer-bg-color: #070c18;             /* rodapé e barra de anúncio (usam a mesma variável) */
+  --md-footer-bg-color--dark: #05080f;       /* parte de baixo do rodapé */
+  --md-code-bg-color: #111a2e;               /* blocos de código */
+  /* textos */
+  --md-default-fg-color: #e2e8f0;            /* texto normal: quase branco */
+  --md-default-fg-color--light: #b4c0d4;     /* texto secundário (menus, legendas) */
+  --md-default-fg-color--lighter: #7d8aa3;   /* texto terciário */
+  --md-default-fg-color--lightest: #1f2a44;  /* linhas e fundos muito subtis */
+  --md-typeset-color: #e2e8f0;               /* cor do texto dentro das páginas */
+  /* variáveis da página Music (antes só existiam para o modo claro) */
+  --card-bg: #111a2e;                        /* fundo dos cartões: azul-escuro, deixa de ser branco */
+  --card-borda: #22304d;                     /* borda dos cartões */
+  --suave: #94a3b8;                          /* cinzento-azulado para textos pequenos */
+}
+
+/* títulos bem visíveis no modo escuro */
+[data-md-color-scheme="slate"] .md-typeset h1,
+[data-md-color-scheme="slate"] .md-typeset h2:not(.destacado),
+[data-md-color-scheme="slate"] .md-typeset h3 { color: #f8fafc; }   /* quase branco (o h2 "destacado" do clique fica de fora, para continuar teal) */
+
+[data-md-color-scheme="slate"] .md-typeset h2,
+[data-md-color-scheme="slate"] .md-typeset h3 { font-weight: 600; } /* o Material usa 300 (muito fino); 600 lê-se bem */
+
+/* Título principal */
+.md-typeset h1 {
+  color: var(--md-typeset-color);
+  font-weight: 700;
+  border-bottom: 3px solid var(--md-accent-fg-color);
+  padding-bottom: 0.3em;
+}
+
+.md-typeset h2 {
+  cursor: pointer;
+}
+
+.md-typeset h2.destacado {
+  color: var(--md-accent-fg-color);
+}
+
+.md-typeset img[align="right"] {
+  border-radius: 50%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  margin-left: 1rem;
+}
+
+/* =====================================================================
+   Superfícies partilhadas (cartões, barras) - acompanham o tema claro/escuro
+   ===================================================================== */
+:root {
+  --card-bg: color-mix(in srgb, var(--md-accent-fg-color) 7%, var(--md-default-bg-color));
+  --card-borda: color-mix(in srgb, var(--md-accent-fg-color) 22%, transparent);
+  --suave: color-mix(in srgb, var(--md-default-fg-color) 60%, transparent);
+}
+
+/* animação de entrada: o JS põe a classe "in" quando o elemento aparece */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition-delay: calc(var(--i, 0) * 55ms);
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* =====================================================================
+   PHOTOGRAPHY - mosaico
+   ===================================================================== */
+.gallery-intro {
+  color: var(--suave);
+}
+
+.gallery-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 1.2rem;
+}
+.chip {
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--card-borda);
+  background: transparent;
+  color: var(--md-default-fg-color);
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.chip:hover {
+  transform: translateY(-2px);
+  border-color: var(--md-accent-fg-color);
+}
+.chip.ativo {
+  background: var(--md-accent-fg-color);
+  border-color: var(--md-accent-fg-color);
+  color: var(--md-default-bg-color);
+  font-weight: 600;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-auto-rows: 190px;
+  grid-auto-flow: dense; /* preenche os buracos do mosaico */
+  gap: 10px;
+}
+.md-typeset .foto {
+  display: block;
+  width: 100%;
+  margin: 0;
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--card-bg);
+  opacity: 0;
+  transform: translateY(18px) scale(0.97);
+  transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.3s ease;
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+.foto.in {
+  opacity: 1;
+  transform: none;
+}
+.foto[hidden] {
+  display: none;
+}
+/* formatos: wide = 2 colunas, tall = 2 linhas, big = 2x2 */
+.foto.wide { grid-column: span 2; }
+.foto.tall { grid-row: span 2; }
+.foto.big  { grid-column: span 2; grid-row: span 2; }
+
+.foto button {
+  all: unset;
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
+}
+.foto button:focus-visible {
+  outline: 3px solid var(--md-accent-fg-color);
+  outline-offset: -3px;
+}
+.md-typeset .foto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  margin: 0;
+  border-radius: 0;
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.4s;
+}
+.foto:hover {
+  box-shadow: 0 12px 30px -8px color-mix(in srgb, var(--md-accent-fg-color) 55%, transparent);
+}
+.foto:hover img,
+.foto button:focus-visible img {
+  transform: scale(1.08);
+  filter: saturate(1.15);
+}
+.foto figcaption {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  flex-direction: column;
+  padding: 2.5rem 0.9rem 0.8rem;
+  color: #fff;
+  background: linear-gradient(0deg, rgba(2, 6, 23, 0.85), transparent);
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+.foto figcaption b {
+  font-size: 0.8rem;
+}
+.foto figcaption span {
+  font-size: 0.65rem;
+  opacity: 0.8;
+}
+.foto:hover figcaption,
+.foto button:focus-visible figcaption {
+  transform: none;
+  opacity: 1;
+}
+@media (hover: none) {
+  /* em telemóveis não há hover: mostra sempre a legenda */
+  .foto figcaption { transform: none; opacity: 1; }
+}
+@media (max-width: 520px) {
+  .gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 150px; }
+}
+
+/* lightbox */
+.lightbox[hidden] { display: none; }
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  animation: lb-entrar 0.25s ease;
+}
+.lightbox__fundo {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.92);
+  backdrop-filter: blur(8px);
+}
+.lightbox__palco {
+  position: relative;
+  margin: 0;
+  max-width: min(92vw, 1400px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  color: #fff;
+}
+.lightbox__palco img {
+  max-width: 100%;
+  max-height: 78vh;
+  margin: 0;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.lightbox__palco img.in {
+  opacity: 1;
+  transform: none;
+}
+.lightbox figcaption {
+  display: flex;
+  gap: 0.9rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+.lightbox figcaption span { opacity: 0.7; font-size: 0.7rem; }
+.lightbox figcaption em { opacity: 0.5; font-size: 0.7rem; font-style: normal; }
+.lightbox__fechar,
+.lightbox__nav {
+  position: absolute;
+  z-index: 1;
+  cursor: pointer;
+  border: 0;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  width: 2.8rem;
+  height: 2.8rem;
+  font-size: 1.8rem;
+  line-height: 1;
+  transition: background 0.2s, transform 0.2s;
+}
+.lightbox__fechar:hover,
+.lightbox__nav:hover {
+  background: var(--md-accent-fg-color);
+  transform: scale(1.1);
+}
+.lightbox__fechar { top: 1rem; right: 1rem; }
+.lightbox__nav { top: 50%; margin-top: -1.4rem; }
+.lightbox__nav--ant { left: 1rem; }
+.lightbox__nav--seg { right: 1rem; }
+body.lightbox-aberto { overflow: hidden; }
+@keyframes lb-entrar { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .foto, .lightbox, .foto figcaption {
+    transition: none !important;
+    animation: none !important;
+  }
+  .reveal, .foto { opacity: 1; transform: none; }
+}

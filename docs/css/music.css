@@ -74,16 +74,26 @@
 /* Regra de ouro: NADA aqui tem overflow (nem auto, nem hidden). As colunas usam minmax(0, 1fr), por isso o mapa
    encolhe até caber em qualquer ecrã, e o quadrado cresce com transform (que não muda o layout), logo não há scrollbars. */
 .heatmap { --gap: 3px; }                             /* espaço entre quadrados (usado nas linhas e na grelha) */
+/* 6 níveis de cor (0 = nada ... 5 = máximo). Modo claro: do cinzento muito claro ao verde-petróleo escuro */
+.heatmap { --heat-0: #e5ebf2; --heat-1: #b4ebe2; --heat-2: #6ed4c6; --heat-3: #25aa9c; --heat-4: #0f766e; --heat-5: #0a4a46; --heat-accent: #0f766e; }
+/* Modo escuro: parte de um azul-ardósia visível sobre o fundo e sobe até quase branco; cada degrau é bem mais claro que o anterior */
+[data-md-color-scheme="slate"] .heatmap { --heat-0: #1c2740; --heat-1: #0f4c4a; --heat-2: #0e8074; --heat-3: #2dc4b0; --heat-4: #7ae8d4; --heat-5: #d5fff6; --heat-accent: #5eead4; }
+.heatmap [data-level="0"] { background: var(--heat-0); } /* a cor de cada quadrado vem do seu nível (data-level, definido no JS)... */
+.heatmap [data-level="1"] { background: var(--heat-1); } /* ...e a legenda usa exatamente as mesmas regras */
+.heatmap [data-level="2"] { background: var(--heat-2); }
+.heatmap [data-level="3"] { background: var(--heat-3); }
+.heatmap [data-level="4"] { background: var(--heat-4); }
+.heatmap [data-level="5"] { background: var(--heat-5); }
 .heatmap__grid { display: grid; gap: var(--gap); }   /* as 8 linhas (cabeçalho + 7 dias) */
 .heatmap__row { display: grid; grid-template-columns: 2.2rem repeat(24, minmax(0, 1fr)) 3rem; gap: var(--gap); align-items: center; } /* dia | 24 horas | total do dia */
 .heatmap__hour, .heatmap__day, .heatmap__total, .heatmap__total-head { font-size: 0.6rem; color: var(--suave); white-space: nowrap; transition: color 0.15s, opacity 0.15s; } /* textos pequenos à volta do mapa */
 .heatmap__hour { justify-self: center; }             /* o número fica centrado por cima da sua coluna */
 .heatmap__hour--quiet { opacity: 0; }                /* só de 3 em 3 horas ficam visíveis, para não apinhar... */
 .heatmap__total, .heatmap__total-head { text-align: right; font-variant-numeric: tabular-nums; } /* total do dia alinhado à direita */
-.heatmap__cell { aspect-ratio: 1; border-radius: 3px; background: color-mix(in srgb, var(--md-accent-fg-color) var(--p), transparent); } /* quadrado; a cor depende de --p */
+.heatmap__cell { aspect-ratio: 1; border-radius: 3px; } /* quadrado; a cor vem do data-level */
 .heatmap__cell { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s; } /* o crescimento tem um pequeno "ressalto" no fim */
-.heatmap__cell:hover, .heatmap__cell.is-active { transform: scale(1.75); z-index: 2; box-shadow: 0 0 0 1.5px var(--md-default-fg-color), 0 6px 14px rgba(0, 0, 0, 0.35); } /* o quadrado cresce POR CIMA dos vizinhos, com contorno e sombra */
-.heatmap__day.is-hot, .heatmap__hour.is-hot { color: var(--md-accent-fg-color); font-weight: 700; } /* o dia e a hora do quadrado escolhido ficam em destaque... */
+.heatmap__cell:hover, .heatmap__cell.is-active { transform: scale(1.75); z-index: 2; box-shadow: 0 0 0 1px var(--md-default-bg-color), 0 0 0 2.5px var(--md-default-fg-color), 0 6px 14px rgba(0, 0, 0, 0.35); } /* o quadrado cresce POR CIMA dos vizinhos, com contorno duplo (escuro por dentro, claro por fora) para se ver em qualquer cor */
+.heatmap__day.is-hot, .heatmap__hour.is-hot { color: var(--heat-accent); font-weight: 700; } /* o dia e a hora do quadrado escolhido ficam em destaque... */
 .heatmap__hour--quiet.is-hot { opacity: 1; }         /* ...mesmo as horas que estavam escondidas */
 
 .heatmap .heatmap__cell { opacity: 0; }              /* quadrados escondidos até o mapa aparecer no ecrã */
@@ -91,19 +101,23 @@
 .heatmap.in .heatmap__cell { opacity: 1; animation: heatmap-pop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) var(--delay, 0ms) backwards; } /* --delay (do JS) faz a onda na diagonal */
 
 .heatmap__info { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 1.5rem; margin-top: 0.9rem; } /* linha de detalhe à esquerda, legenda à direita */
+.heatmap .subtitle { margin-bottom: 0.7rem; }         /* o título do mapa: diz logo o que se está a medir */
 .heatmap__readout { font-size: 0.78rem; min-height: 1.3em; } /* frase com o valor do quadrado escolhido */
-.heatmap__readout b { color: var(--md-accent-fg-color); } /* "Mon, 16:00-17:00" na cor de destaque */
+.heatmap__readout b { color: var(--heat-accent); } /* "Mon, 16:00-17:00" na cor de destaque */
 .heatmap__legend { display: flex; align-items: center; gap: 0.5rem; font-size: 0.65rem; color: var(--suave); font-variant-numeric: tabular-nums; } /* "0 min [barra] 57 min" */
-.heatmap__scale { display: block; width: 120px; height: 10px; border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--md-accent-fg-color) 5%, transparent), var(--md-accent-fg-color)); } /* barra de cores: do mais fraco ao mais forte */
+.heatmap__scale { display: flex; gap: 3px; }          /* legenda: 5 blocos, do mais fraco ao mais forte */
+.heatmap__scale i { display: block; width: 22px; height: 10px; border-radius: 3px; }
 .md-typeset .heatmap__summary { margin: 0.7rem 0 0; font-size: 0.72rem; color: var(--suave); } /* frase com hora de pico (".md-typeset" para ganhar às margens normais dos parágrafos) */
 
 @media (max-width: 600px) {                          /* telemóvel: tira a coluna dos totais para os quadrados terem mais espaço */
   .heatmap__row { grid-template-columns: 2rem repeat(24, minmax(0, 1fr)); }
   .heatmap__total, .heatmap__total-head { display: none; }
+  .heatmap__readout { min-height: 2.6em; }           /* reserva 2 linhas: a frase do detalhe não empurra a página para baixo */
 }
+@media (max-width: 380px) { .heatmap__readout { min-height: 3.9em; } } /* ecrãs minúsculos: a frase pode ocupar 3 linhas, por isso reserva-se esse espaço */
 @media (prefers-reduced-motion: reduce) {            /* quem pediu "menos animações": sem entrada nem crescimento, só contorno */
   .heatmap .heatmap__cell { opacity: 1; animation: none !important; transition: none; }
-  .heatmap__cell:hover, .heatmap__cell.is-active { transform: none; box-shadow: inset 0 0 0 2px var(--md-default-fg-color); }
+  .heatmap__cell:hover, .heatmap__cell.is-active { transform: none; box-shadow: inset 0 0 0 1px var(--md-default-bg-color), inset 0 0 0 3px var(--md-default-fg-color); }
 }
 
 /* ---------- playlists ---------- */

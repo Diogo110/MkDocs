@@ -89,11 +89,13 @@ def compute_stats(plays):                      # recebe os registos e devolve o 
         current = current + 1 if after - before == timedelta(days=1) else 1  # dias seguidos? +1 : recomeça em 1
         best = max(best, current)              # guarda o maior valor que já vimos
 
-    # nº de dias COM música em cada dia da semana (0 = segunda ... 6 = domingo)
-    active_days_per_weekday = Counter(day.weekday() for day in day_ms)
-    # média de MINUTOS de música em cada hora, nos dias em que ouvi música
+    # nº de dias do CALENDÁRIO de cada dia da semana, do primeiro ao último dia com música
+    # (conta também os dias em que não ouvi nada: assim cada quadrado mostra um dia típico, não só os dias bons)
+    first_day, last_day = days[0], days[-1]
+    calendar_days_per_weekday = Counter((first_day + timedelta(days=i)).weekday() for i in range((last_day - first_day).days + 1))
+    # média de MINUTOS de música em cada hora de um dia típico (ex.: uma segunda-feira qualquer)
     avg_minutes = [
-        [round(week_hour_ms[d][h] / 60_000 / max(active_days_per_weekday[d], 1), 1) for h in range(24)]
+        [round(week_hour_ms[d][h] / 60_000 / max(calendar_days_per_weekday[d], 1), 1) for h in range(24)]
         for d in range(7)
     ]
 
@@ -130,7 +132,7 @@ def compute_stats(plays):                      # recebe os registos e devolve o 
         "by_month": [{"month": month, "hours": to_hours(ms)} for month, ms in sorted(month_ms.items())],  # uma entrada por mês
         "by_hour": [to_hours(ms) for ms in hour_ms],                 # 24 valores (hora 0 a 23)
         "by_weekday": [to_hours(ms) for ms in weekday_ms],           # 7 valores (segunda a domingo)
-        "heatmap_avg_min": avg_minutes,                              # tabela 7x24 com a média de MINUTOS por hora
+        "heatmap_avg_min": avg_minutes,                              # tabela 7x24: média de MINUTOS de música por hora, num dia típico
     }
 
 

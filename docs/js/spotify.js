@@ -116,50 +116,60 @@ document.addEventListener("DOMContentLoaded", () => {              // "quando a 
     reveal($("music-by-year"));                                          // arranca as animações
   }
 
-  // Mapa de calor: dia da semana x hora. Cada quadrado cresce quando o rato passa (ou ao tocar) e
-  // uma linha por baixo explica o valor; a legenda mostra a escala e a coluna da direita o total do dia.
+  // Converte os totais do JSON antigo (horas somadas ao longo dos anos) em média de minutos por hora, num dia típico.
+  // Divide pelo nº de dias de calendário de cada dia da semana (ex.: quantas segundas-feiras houve desde o início).
+  function averageFromTotals(s) {
+    const totals = s.heatmap_total_hours;                          // tabela 7x24 com HORAS TOTAIS (a soma de todos os anos)
+    if (!totals) throw new Error("No heatmap data in spotify_stats.json: run  python tools/spotify_stats.py");  // aviso útil em vez de um erro críptico
+    const [y0, m0] = s.by_month[0].month.split("-").map(Number);   // primeiro mês com dados, ex.: [2016, 9]
+    const [y1, m1] = s.by_month[s.by_month.length - 1].month.split("-").map(Number); // último mês com dados
+    const counts = new Array(7).fill(0);                           // quantas segundas, terças... houve no período
+    for (let t = Date.UTC(y0, m0 - 1, 1); t <= Date.UTC(y1, m1, 0); t += 86400000) { // do dia 1 do primeiro mês ao último dia do último (dia 0 do mês seguinte)
+      counts[(new Date(t).getUTCDay() + 6) % 7]++;                 // getUTCDay(): domingo=0; o "+6 % 7" põe a segunda em 0
+    }
+    return totals.map((row, d) => row.map((hours) => (hours * 60) / counts[d])); // horas -> minutos, por dia
+  }
+
+  // Mapa de calor: dia da semana x hora.
+  // O que mede: a MÉDIA de minutos de música que ouço em cada hora de um dia típico (ex.: uma segunda-feira qualquer),
+  // contando todos os dias desde o início, mesmo os que não ouvi nada. Por isso nunca passa de 60 minutos por quadrado.
+  // Cada quadrado cresce quando o rato passa (ou ao tocar), uma linha por baixo explica o valor,
+  // a legenda mostra a escala e a coluna da direita o total médio de cada dia.
   function heatmap(s) {
-    const average = s.heatmap_avg_min;                             // tabela 7x24: minutos de música, em média, em cada hora (JSON novo)
-    const grid = average || s.heatmap_total_hours;                 // JSON antigo: usa os totais em horas, para a secção nunca ficar vazia
-    if (!grid) throw new Error("No heatmap data in spotify_stats.json: run  python tools/spotify_stats.py");  // aviso útil em vez de um erro críptico
-    const isAverage = Boolean(average);                            // true = médias em minutos; false = totais em horas
-    const unit = isAverage ? "min" : "h";                          // unidade mostrada na legenda
-    const max = Math.max(...grid.flat());                          // .flat() achata a tabela; o máximo define a cor mais forte
-    const amount = (v) => isAverage
-      ? (v === 0 ? "0" : v < 1 ? "<1" : String(Math.round(v)))     // minutos: arredonda; abaixo de 1 mostra "<1"
-      : v.toLocaleString("en", { maximumFractionDigits: 1 });      // horas: uma casa decimal
-    const describe = (v) => isAverage ? `${amount(v)} min of music on average` : `${amount(v)} h of music in total`; // frase do valor de um quadrado
-    const rowTotal = (row) => {                                    // total mostrado no fim de cada linha (cada dia da semana)
-      const sum = row.reduce((a, b) => a + b, 0);                  // soma as 24 horas do dia
-      return isAverage ? `${(sum / 60).toFixed(1)} h` : `${fmt(sum)} h`; // médias: minutos -> horas por dia em que ouço; totais: horas
-    };
+    const grid = s.heatmap_avg_min || averageFromTotals(s);        // JSON novo: já vem em médias; JSON antigo: converte os totais
+    const max = Math.max(...grid.flat());                          // .flat() achata a tabela; o máximo define o nível mais forte
+    // Níveis de cor por "quantis": ordenamos todos os valores e cada um dos 5 tons fica com ~1/5 dos quadrados.
+    // Assim as cores ficam sempre bem distintas (com uma escala linear, quase tudo ficava com o mesmo tom). 0 = sem música
+    const sorted = grid.flat().filter((v) => v > 0).sort((a, b) => a - b); // todos os valores acima de zero, do menor para o maior
+    const level = (v) => (v <= 0 ? 0 : 1 + Math.min(4, Math.floor((sorted.indexOf(v) * 5) / sorted.length))); // posição do valor na lista -> tom 1 a 5
+    const minutes = (v) => (v === 0 ? "0" : v < 1 ? "<1" : String(Math.round(v))); // arredonda; abaixo de 1 mostra "<1"
+    const describe = (v) => `${minutes(v)} min of music on average`; // frase do valor de um quadrado
+    const dayHours = (row) => (row.reduce((a, b) => a + b, 0) / 60).toFixed(1) + " h"; // soma das 24 horas, em horas: o total médio desse dia
     const hint = "Hover or tap a square to see the details.";      // texto da linha de detalhe, antes de escolher um quadrado
 
     // linha de cima: todas as horas existem (para poder destacar a escolhida), mas só de 3 em 3 ficam visíveis
-    let html = '<div class="heatmap reveal" role="img" aria-label="Heatmap of my listening by weekday and hour"><div class="heatmap__grid">';
+    let html = '<div class="heatmap reveal" role="img" aria-label="Heatmap of the average minutes of music I listen to, by weekday and hour">';
+    html += '<div class="subtitle">Average minutes of music per hour, on a typical day</div><div class="heatmap__grid">';
     html += '<div class="heatmap__row"><span></span>' +
       Array.from({ length: 24 }, (_, h) => `<span class="heatmap__hour${h % 3 ? " heatmap__hour--quiet" : ""}" data-h="${h}">${h}</span>`).join("") +
-      `<span class="heatmap__total-head">${isAverage ? "per day" : "total"}</span></div>`;
+      '<span class="heatmap__total-head">per day</span></div>';
     grid.forEach((row, d) => {                                     // uma linha por dia da semana
       html += `<div class="heatmap__row"><span class="heatmap__day" data-d="${d}">${DAYS[d]}</span>`; // nome do dia à esquerda
-      // um quadradinho por hora; --p é a intensidade da cor (mínimo 5% para não desaparecer);
-      // --delay faz os quadrados aparecerem em onda na diagonal
-      html += row.map((v, h) => `<i class="heatmap__cell" data-d="${d}" data-h="${h}" style="--p:${Math.max(5, Math.round((v / max) * 100))}%; --delay:${(d + h) * 16}ms"></i>`).join("");
-      html += `<span class="heatmap__total">${rowTotal(row)}</span></div>`; // total do dia à direita
+      // um quadradinho por hora; data-level escolhe a cor no CSS; --delay faz os quadrados aparecerem em onda na diagonal
+      html += row.map((v, h) => `<i class="heatmap__cell" data-level="${level(v)}" data-d="${d}" data-h="${h}" style="--delay:${(d + h) * 16}ms"></i>`).join("");
+      html += `<span class="heatmap__total">${dayHours(row)}</span></div>`; // total médio do dia à direita
     });
     const peakHour = s.by_hour.indexOf(Math.max(...s.by_hour));    // posição do maior valor = hora de pico
     html += `</div>
       <div class="heatmap__info">
         <div class="heatmap__readout">${hint}</div>
-        <div class="heatmap__legend"><span>0 ${unit}</span><i class="heatmap__scale"></i><span>${amount(max)} ${unit}</span></div>
-      </div></div>`;
-    html += isAverage
-      ? `<p class="heatmap__summary">Peak hour: <b>${pad(peakHour)}:00</b>. Each square is the average minutes of music in that hour, on days I listen (Lisbon time). Stronger colour = more listening.</p>`
-      : `<p class="heatmap__summary">Peak hour: <b>${pad(peakHour)}:00</b>. Each square is the total hours of music in that hour of the week since ${s.first_year} (Lisbon time). Stronger colour = more listening.</p>`;
-    $("music-heatmap").innerHTML = html;                                 // mete tudo na página
+        <div class="heatmap__legend"><span>Less</span><span class="heatmap__scale">${[1, 2, 3, 4, 5].map((n) => `<i data-level="${n}"></i>`).join("")}</span><span>More</span></div>
+      </div>
+      <p class="heatmap__summary">Peak hour: <b>${pad(peakHour)}:00</b>. Each square is how many minutes of music I listen to, on average, in that hour of that weekday (Lisbon time). It counts every day since ${s.first_year}, including days without music, so the busiest hour of all averages ${minutes(max)} min. Colours are relative: each shade covers about a fifth of the squares. The column on the right is the average total per day.</p></div>`;
+    $("music-heatmap").innerHTML = html;                           // mete tudo na página
 
     // ---- interação: o quadrado cresce (CSS) e esta função escreve o detalhe por baixo ----
-    const map = $("music-heatmap").querySelector(".heatmap");            // a caixa do mapa
+    const map = $("music-heatmap").querySelector(".heatmap");      // a caixa do mapa
     const readout = map.querySelector(".heatmap__readout");        // a linha de detalhe
     let active = null;                                             // o quadrado escolhido neste momento
     const select = (cell) => {                                     // escolhe um quadrado (ou nenhum, com null)
@@ -171,7 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {              // "quando a 
       cell.classList.add("is-active");                             // mantém-no crescido (útil no telemóvel, onde não há hover)
       map.querySelector(`.heatmap__day[data-d="${d}"]`).classList.add("is-hot");   // destaca o nome do dia...
       map.querySelector(`.heatmap__hour[data-h="${h}"]`).classList.add("is-hot");  // ...e o número da hora
-      readout.innerHTML = `<b>${DAYS[d]}, ${pad(h)}:00-${pad((h + 1) % 24)}:00</b> · ${describe(grid[d][h])}`; // ex.: "Mon, 16:00-17:00 · 31 min of music on average"
+      readout.innerHTML = `<b>${DAYS[d]}, ${pad(h)}:00-${pad((h + 1) % 24)}:00</b> · ${describe(grid[d][h])}`; // ex.: "Mon, 16:00-17:00 · 11 min of music on average"
     };
     map.addEventListener("pointerover", (e) => {                   // rato por cima, ou toque
       const cell = e.target.closest(".heatmap__cell");             // estamos num quadrado? (senão é null)
@@ -180,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {              // "quando a 
     map.addEventListener("pointerleave", (e) => {                  // o ponteiro saiu do mapa
       if (e.pointerType === "mouse") select(null);                 // com rato limpa; com toque deixa o último detalhe visível
     });
-    reveal($("music-heatmap"));                                          // arranca a animação de entrada
+    reveal($("music-heatmap"));                                    // arranca a animação de entrada
   }
 
   // "Donut": um círculo cuja volta se vai preenchendo até à percentagem pedida

@@ -59,16 +59,41 @@
 .tracks small { font-size: 0.66rem; font-weight: 400; color: var(--suave); } /* artista: mais pequeno e cinzento */
 .tracks__plays { font-weight: 700; text-align: right; color: var(--md-accent-fg-color); font-variant-numeric: tabular-nums; } /* nº de plays à direita, em destaque */
 
-/* ---------- colunas por ano ---------- */
-.years { display: flex; align-items: flex-end; gap: 0.5rem; padding: 0.4rem 0 0.6rem; } /* colunas lado a lado, alinhadas pela base */
-.year { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 0.7rem; } /* cada ano ocupa a mesma largura */
-.year__hours { color: var(--suave); font-variant-numeric: tabular-nums; } /* horas por cima da coluna */
-.year__column { display: flex; align-items: flex-end; width: 100%; height: 120px; margin: 4px 0; } /* "caixa" de 120px onde a coluna cresce de baixo para cima */
-.year__column i { display: block; width: 100%; height: 0; border-radius: 8px 8px 2px 2px; background: linear-gradient(180deg, var(--md-accent-fg-color), color-mix(in srgb, var(--md-accent-fg-color) 35%, transparent)); } /* coluna com gradiente, começa com altura 0 */
-.year__column i { transition: height 1s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i, 0) * 70ms), filter 0.2s; } /* anima a altura, em cascata */
-.year.in .year__column i { height: max(var(--h), 3px); } /* ao aparecer, cresce até --h (mínimo 3px para anos quase vazios) */
-.year:hover .year__column i, .year:focus-visible .year__column i { filter: brightness(1.2); } /* rato ou teclado em cima: fica mais brilhante */
-.year small { font-size: 0.55rem; line-height: 1.2; color: var(--suave); overflow-wrap: anywhere; } /* nome do artista do ano, pequenino */
+/* ---------- gráfico de barras por ano (eixo com unidades) ---------- */
+.years { --axis-w: 3.4rem; --plot-h: 240px; display: block; padding: 0.4rem 0 0; } /* caixa do gráfico: largura do eixo e altura da área das barras */
+.ychart { position: relative; padding: 1.6rem 0 0; } /* espaço em cima para o título do eixo e para o valor da barra mais alta */
+.ychart__unit { position: absolute; top: 0; left: 0; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--suave); } /* título do eixo: diz a unidade */
+.ychart__grid { position: absolute; left: 0; right: 0; top: 1.6rem; height: var(--plot-h); pointer-events: none; } /* camada das linhas de grelha, por baixo das barras */
+.ychart__tick { position: absolute; left: 0; right: 0; bottom: var(--y); height: 1px; display: flex; align-items: center; } /* uma linha por valor do eixo; --y (do JS) é a altura em % */
+.ychart__tick span { flex: none; width: var(--axis-w); box-sizing: border-box; padding-right: 0.6rem; text-align: right; font-size: 0.62rem; color: var(--suave); font-variant-numeric: tabular-nums; } /* "1,000 h" */
+.ychart__tick::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--md-default-fg-color) 9%, transparent); } /* linha de grelha discreta (contínua: o tracejado fica reservado ao ano em curso) */
+.ychart__tick:first-child::after { background: color-mix(in srgb, var(--md-default-fg-color) 28%, transparent); } /* a linha do zero é mais forte */
+.ychart__bars { position: relative; display: flex; gap: 0.7rem; margin-left: var(--axis-w); } /* as barras começam depois do eixo */
+.ybar { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; outline: none; } /* cada ano ocupa a mesma largura */
+.ybar__plot { position: relative; display: flex; align-items: flex-end; justify-content: center; width: 100%; height: var(--plot-h); } /* a barra cresce de baixo para cima */
+.ybar__col { position: relative; box-sizing: border-box; width: 100%; max-width: 64px; height: 0; border-radius: 8px 8px 2px 2px; background: linear-gradient(180deg, var(--md-accent-fg-color), color-mix(in srgb, var(--md-accent-fg-color) 40%, transparent)); } /* barra com gradiente; começa com altura 0 */
+.ybar__col { transition: height 1s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i, 0) * 70ms), filter 0.2s, box-shadow 0.2s; } /* anima a altura, em cascata */
+.ybar.in .ybar__col { height: max(var(--h), 3px); } /* ao aparecer, cresce até --h (mínimo 3px para anos quase vazios) */
+.ybar:hover .ybar__col, .ybar:focus-visible .ybar__col { filter: brightness(1.15); box-shadow: 0 6px 18px color-mix(in srgb, var(--md-accent-fg-color) 35%, transparent); } /* rato ou teclado: brilho e sombra */
+.ybar__val { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 5px; white-space: nowrap; font-size: 0.7rem; font-weight: 600; font-variant-numeric: tabular-nums; opacity: 0; transition: opacity 0.4s ease calc(var(--i, 0) * 70ms + 0.7s); } /* valor por cima da barra, com a unidade */
+.ybar.in .ybar__val { opacity: 1; }
+.ybar__val em { font-style: normal; font-weight: 400; color: var(--suave); } /* a unidade "h" é mais discreta */
+.ybar--peak .ybar__val { color: var(--md-accent-fg-color); } /* o melhor ano destaca-se */
+.ybar__year { margin-top: 0.55rem; font-size: 0.78rem; } /* ano por baixo do eixo */
+.ybar__tag { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--md-accent-fg-color); } /* "so far" no ano em curso */
+.ybar__artist { margin-top: 2px; font-size: 0.58rem; line-height: 1.2; color: var(--suave); overflow-wrap: anywhere; } /* artista nº 1 do ano */
+.ybar--partial .ybar__col { background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--md-accent-fg-color) 30%, transparent) 0 4px, transparent 4px 9px); border: 2px dashed var(--md-accent-fg-color); border-bottom: 0; } /* ano em curso: barra TRACEJADA (contorno tracejado + riscas), porque ainda não acabou */
+.ychart__legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem; margin: 0.9rem 0 0 var(--axis-w); font-size: 0.7rem; color: var(--suave); } /* legenda por baixo */
+.ychart__legend span { display: inline-flex; align-items: center; gap: 0.45rem; }
+.ychart__legend i { width: 16px; height: 10px; box-sizing: border-box; border-radius: 3px; background: var(--md-accent-fg-color); }
+.ychart__legend i.is-dashed { background: transparent; border: 1.5px dashed var(--md-accent-fg-color); }
+@media (max-width: 600px) { /* telemóvel: menos altura, barras mais juntas, sem artistas nem "h" por cima das barras (o eixo já diz) */
+  .years { --axis-w: 2.8rem; --plot-h: 200px; }
+  .ychart__bars { gap: 0.25rem; }
+  .ybar__val { font-size: 0.6rem; }
+  .ybar__val em, .ybar__artist { display: none; }
+  .ybar__year { font-size: 0.62rem; }
+}
 
 /* ---------- mapa de calor ---------- */
 /* Regra de ouro: NADA aqui tem overflow (nem auto, nem hidden). As colunas usam minmax(0, 1fr), por isso o mapa
@@ -120,16 +145,16 @@
   .heatmap__cell:hover, .heatmap__cell.is-active { transform: none; box-shadow: inset 0 0 0 1px var(--md-default-bg-color), inset 0 0 0 3px var(--md-default-fg-color); }
 }
 
-/* ---------- playlists ---------- */
-.playlists { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 1rem; } /* cartões lado a lado quando couberem; min(...,100%) evita scroll horizontal em ecrãs muito estreitos */
-.playlist { border: 1px solid var(--card-borda); border-radius: 16px; overflow: hidden; background: var(--card-bg); transition: transform 0.2s, border-color 0.2s; } /* caixa do cartão */
-.playlist:hover { transform: translateY(-3px); border-color: var(--md-accent-fg-color); } /* ao passar o rato: sobe 3px e a borda ganha cor */
-.playlist__cover { position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: flex-end; gap: 1rem; min-height: 150px; padding: 1rem; color: #fff; background: linear-gradient(135deg, hsl(var(--hue) 60% 36%), hsl(calc(var(--hue) + 40) 65% 20%)); } /* faixa colorida; --hue (matiz) vem do JS e é diferente em cada cartão */
-.playlist__cover::before { content: ""; position: absolute; inset: -30px; z-index: -2; background: var(--art, none) center / cover; filter: blur(26px) saturate(1.5); opacity: 0; transition: opacity 0.6s; } /* a capa, muito desfocada, como fundo (começa invisível) */
-.playlist.has-art .playlist__cover::before { opacity: 0.85; } /* quando a capa chega, o fundo desfocado aparece */
-.playlist__cover::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.1)); } /* sombra por cima do fundo: o texto branco lê-se sempre bem */
-.playlist__art { flex: none; width: 104px; aspect-ratio: 1; overflow: hidden; border-radius: 12px; background: linear-gradient(135deg, hsl(var(--hue) 65% 48%), hsl(calc(var(--hue) + 50) 70% 28%)); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45); transition: transform 0.3s; } /* o quadrado da capa, com sombra */
-.playlist:hover .playlist__art { transform: scale(1.04) rotate(-1.5deg); } /* ao passar o rato, a capa inclina-se um bocadinho */
+/* ---------- playlists: capa e info à esquerda, lista de faixas logo ao lado (sem botões) ---------- */
+.playlists { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.2rem; } /* um cartão largo por linha */
+.playlist { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 1.4rem; align-items: center; padding: 1.3rem; border: 1px solid var(--card-borda); border-radius: 20px; color: #fff; background: linear-gradient(135deg, hsl(var(--hue) 60% 36%), hsl(calc(var(--hue) + 40) 65% 20%)); transition: border-color 0.2s; } /* cartão: cor própria (--hue) até a capa chegar */
+.playlist:hover { border-color: var(--md-accent-fg-color); }
+.playlist::before { content: ""; position: absolute; inset: -40px; z-index: -2; background: var(--art, none) center / cover; filter: blur(34px) saturate(1.6); opacity: 0; transition: opacity 0.6s; } /* a capa, muito desfocada, como fundo do cartão inteiro (começa invisível) */
+.playlist.has-art::before { opacity: 0.9; } /* quando a capa chega, o fundo aparece */
+.playlist::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0.3)); } /* sombra por cima do fundo: o texto branco lê-se sempre bem */
+.playlist__info { display: flex; flex-direction: column; gap: 1rem; min-width: 0; } /* capa em cima, texto por baixo */
+.playlist__art { flex: none; width: 150px; max-width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 14px; background: linear-gradient(135deg, hsl(var(--hue) 65% 48%), hsl(calc(var(--hue) + 50) 70% 28%)); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5); transition: transform 0.3s; } /* o quadrado da capa, com sombra */
+.playlist:hover .playlist__art { transform: scale(1.03) rotate(-1.5deg); } /* ao passar o rato, a capa inclina-se um bocadinho */
 .playlist__art img, .playlist__art svg { display: block; width: 100%; height: 100%; object-fit: cover; } /* imagem ou vinil enchem o quadrado */
 .vinyl__disc, .vinyl__hole { fill: hsl(0 0% 7%); }   /* disco preto */
 .vinyl__groove { fill: none; stroke: #fff; stroke-opacity: 0.09; stroke-width: 0.6; } /* sulcos finos */
@@ -137,21 +162,46 @@
 .vinyl__shine { fill: #fff; fill-opacity: 0.08; }    /* reflexo de luz */
 .playlist:hover .vinyl { animation: vinyl-spin 6s linear infinite; } /* o vinil roda enquanto o rato estiver no cartão */
 @keyframes vinyl-spin { to { transform: rotate(360deg); } }
-.playlist__text { flex: 1; min-width: 0; }           /* deixa o texto encolher em vez de empurrar a capa */
-.playlist__title { display: block; font-size: 1.05rem; line-height: 1.2; } /* nome da playlist */
-.playlist__desc { margin: 0.25rem 0 0; font-size: 0.7rem; opacity: 0.85; } /* descrição, mais pequena */
-.playlist__tracks { display: inline-block; margin-top: 0.5rem; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.62rem; white-space: nowrap; background: rgba(0, 0, 0, 0.35); } /* pílula com o nº de faixas */
-.playlist__body { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.7rem 1rem; } /* botão à esquerda, link à direita */
-.playlist__button { cursor: pointer; border: 0; border-radius: 999px; padding: 0.4rem 1rem; font: inherit; font-size: 0.72rem; font-weight: 700; color: #fff; background: var(--md-accent-fg-color); transition: filter 0.2s, transform 0.2s; } /* botão redondo na cor de destaque */
-[data-md-color-scheme="slate"] .playlist__button { color: #04201c; } /* no modo escuro o destaque é claro, por isso o texto fica escuro */
-.playlist__button:hover { filter: brightness(1.12); transform: scale(1.04); } /* ao passar o rato: mais brilho e ligeiro zoom */
-.md-typeset .playlist__link { font-size: 0.7rem; color: var(--suave); } /* link discreto (".md-typeset" para ganhar à cor normal dos links) */
-.md-typeset .playlist__link:hover { color: var(--md-accent-fg-color); } /* ao passar o rato fica na cor de destaque */
-.playlist__player { padding: 0 0.7rem 0.7rem; }      /* espaço à volta do leitor */
-.playlist__player iframe { display: block; width: 100%; height: 352px; border: 0; border-radius: 12px; } /* leitor do Spotify, arredondado */
+.playlist__text { min-width: 0; }
+.playlist__title { display: block; font-size: 1.4rem; line-height: 1.15; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4); } /* nome da playlist */
+.playlist__desc { margin: 0.4rem 0 0; font-size: 0.78rem; opacity: 0.88; } /* descrição */
+.playlist__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.9rem; margin-top: 0.8rem; } /* nº de faixas + link */
+.playlist__tracks { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.66rem; white-space: nowrap; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(6px); } /* pílula com o nº de faixas */
+.md-typeset .playlist__link { font-size: 0.72rem; color: rgba(255, 255, 255, 0.82); } /* link discreto (".md-typeset" para ganhar à cor normal dos links) */
+.md-typeset .playlist__link:hover { color: #fff; text-decoration: underline; }
+.playlist__player { min-width: 0; } /* o leitor ocupa a coluna da direita */
+.playlist__player iframe { display: block; width: 100%; height: var(--player-h, 352px); border: 0; border-radius: 14px; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45); } /* leitor do Spotify com a lista de faixas; a altura vem do JS (nº de faixas) */
+@media (max-width: 760px) { /* telemóvel: info em cima (capa ao lado do texto), leitor por baixo */
+  .playlist { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 1rem; }
+  .playlist__info { flex-direction: row; align-items: flex-end; }
+  .playlist__art { width: 104px; }
+}
+
+/* ---------- Habits: seletor de unidade e cartões de tempo ---------- */
+.unit-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.9rem; margin: 1rem 0 0.2rem; font-size: 0.75rem; color: var(--suave); } /* "Show time as [h · min | min | days]" */
+.unit-seg { display: inline-flex; gap: 3px; padding: 3px; border: 1px solid var(--card-borda); border-radius: 12px; background: var(--card-bg); } /* caixa do seletor */
+.unit-seg button { cursor: pointer; border: 0; border-radius: 9px; padding: 0.4rem 0.9rem; font: inherit; font-weight: 600; color: var(--md-default-fg-color); background: transparent; } /* cada opção */
+.unit-seg button[aria-pressed="true"] { color: #fff; background: var(--md-accent-fg-color); } /* a opção escolhida */
+[data-md-color-scheme="slate"] .unit-seg button[aria-pressed="true"] { color: #04201c; } /* modo escuro: destaque claro, texto escuro */
+.unit-bar small { font-size: 0.68rem; }
+#music-facts.stat-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } /* 6 cartões = 3 x 2, sem cartão órfão */
+@media (max-width: 640px) { #music-facts.stat-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { #music-facts.stat-cards { grid-template-columns: minmax(0, 1fr); } }
+.stat-card--time { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 0.3rem 0.5rem; min-height: 8.5rem; } /* legenda à esquerda, chip à direita */
+.stat-card--time strong, .stat-card--time small { grid-column: 1 / -1; } /* valor e linhas pequenas ocupam a largura toda */
+.stat-card--time strong { margin-top: 0.3rem; white-space: normal; }
+.stat-card strong em { margin-left: 0.15em; font-size: 0.55em; font-style: normal; font-weight: 500; } /* a unidade é mais pequena que o número */
+.stat-card small { display: block; font-size: 0.68rem; color: var(--suave); font-variant-numeric: tabular-nums; } /* equivalências e notas */
+.unit-chip { display: inline-flex; align-items: center; gap: 0.3rem; cursor: pointer; border: 1px solid var(--card-borda); border-radius: 999px; padding: 0.15rem 0.6rem; font: inherit; font-size: 0.65rem; font-weight: 600; white-space: nowrap; color: var(--md-accent-fg-color); background: transparent; } /* chip clicável: mostra a unidade atual */
+.unit-chip:hover { border-color: var(--md-accent-fg-color); }
+.unit-chip svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.donut-pair { flex-direction: column; align-items: stretch; gap: 0.9rem; } /* os dois anéis (skips e shuffle) empilhados no mesmo cartão */
+.donut__row { display: flex; align-items: center; gap: 0.7rem; }
+
+.donut__row { display: flex; align-items: center; gap: 0.7rem; }
 
 /* ---------- utilizadores que pediram "menos animações" ---------- */
 @media (prefers-reduced-motion: reduce) {            /* desliga as animações */
-  .timeline__line, .timeline__area, .donut__value, .rank__bar i, .year__column i, .playlist, .playlist__button, .playlist__art, .playlist__cover::before { transition: none; }
+  .timeline__line, .timeline__area, .donut__value, .rank__bar i, .ybar__col, .ybar__val, .playlist, .playlist__art, .playlist::before { transition: none; }
   .playlist:hover .vinyl { animation: none; }
 }

@@ -104,16 +104,34 @@ document.addEventListener("DOMContentLoaded", () => {              // "quando a 
     reveal($("music-top-tracks"));                                       // arranca as animações
   }
 
-  function years(list) {                                           // colunas verticais: horas por ano
-    const maxHours = Math.max(...list.map((a) => a.hours));        // o melhor ano define 100% da altura
-    $("music-by-year").innerHTML = list.map((a, i) => `
-      <div class="year reveal" style="--i:${i}; --h:${(a.hours / maxHours) * 100}%" tabindex="0" title="${a.year}: ${fmt(a.hours)} h, top artist ${esc(a.top_artist)}">
-        <span class="year__hours">${fmt(a.hours)}</span>
-        <div class="year__column"><i></i></div>
-        <b>${a.year}</b>
-        <small>${esc(a.top_artist)}</small>
-      </div>`).join("");
-    reveal($("music-by-year"));                                          // arranca as animações
+  function years(s) {                                              // gráfico de barras: horas por ano, com eixo e unidades (recebe o JSON todo)
+    const list = s.by_year;
+    const maxHours = Math.max(...list.map((a) => a.hours));        // o melhor ano
+    // ano em curso = parcial. Se o JSON não tiver last_date (versão antiga), usa a data de hoje
+    const endIso = s.last_date || new Date().toISOString().slice(0, 10);
+    const end = new Date(endIso + "T12:00:00");
+    const ytd = end.getFullYear() === s.last_year && !(end.getMonth() === 11 && end.getDate() === 31); // true = o último ano ainda não acabou
+    // eixo "redondo": escolhe o passo mais pequeno que dê no máximo 4 intervalos (ex.: 0, 500, 1000, 1500, 2000 h)
+    const step = [50, 100, 200, 250, 500, 1000, 2000, 5000].find((st) => maxHours / st <= 4) || 5000;
+    const top = Math.ceil(maxHours / step) * step;                 // topo do eixo
+    const ticks = Array.from({ length: top / step + 1 }, (_, k) => k * step);
+    const hoursText = (h) => (h < 10 ? h.toFixed(1) : fmt(h));     // anos minúsculos mostram 1 casa decimal (2.6 h em vez de 3 h)
+
+    const grid = ticks.map((t) => `<div class="ychart__tick" style="--y:${(t / top) * 100}%"><span>${t ? fmt(t) + " h" : "0"}</span></div>`).join("");
+    const bars = list.map((a, i) => {
+      const partial = ytd && a.year === s.last_year;               // só o último ano pode ser parcial
+      const cls = `ybar reveal${partial ? " ybar--partial" : ""}${a.hours === maxHours ? " ybar--peak" : ""}`;
+      return `
+      <div class="${cls}" style="--i:${i}; --h:${(a.hours / top) * 100}%" tabindex="0" title="${a.year}${partial ? " (so far)" : ""}: ${fmt(a.hours)} h, top artist ${esc(a.top_artist)}">
+        <div class="ybar__plot"><div class="ybar__col"><span class="ybar__val">${hoursText(a.hours)}<em> h</em></span></div></div>
+        <b class="ybar__year">${a.year}</b>
+        ${partial ? '<span class="ybar__tag">so far</span>' : ""}
+        <small class="ybar__artist">${esc(a.top_artist)}</small>
+      </div>`;
+    }).join("");
+    const legend = `<div class="ychart__legend"><span><i></i>Full year</span>${ytd ? `<span><i class="is-dashed"></i>Year to date (up to ${fmtDate(endIso)}): still in progress</span>` : ""}</div>`;
+    $("music-by-year").innerHTML = `<div class="ychart"><span class="ychart__unit">Hours listened per year</span><div class="ychart__grid">${grid}</div><div class="ychart__bars">${bars}</div></div>${legend}`;
+    reveal($("music-by-year"));                                    // arranca as animações
   }
 
   // Converte os totais do JSON antigo (horas somadas ao longo dos anos) em média de minutos por hora, num dia típico.
@@ -145,7 +163,9 @@ document.addEventListener("DOMContentLoaded", () => {              // "quando a 
     const minutes = (v) => (v === 0 ? "0" : v < 1 ? "<1" : String(Math.round(v))); // arredonda; abaixo de 1 mostra "<1"
     const describe = (v) => `${minutes(v)} min of music on average`; // frase do valor de um quadrado
     const dayHours = (row) => (row.reduce((a, b) => a + b, 0) / 60).toFixed(1) + " h"; // soma das 24 horas, em horas: o total médio desse dia
-    const hint = "Hover or tap a square to see the details.";      // texto da linha de detalhe, antes de escolher um quadrado
+    const hint = "Hover or tap a square to see the details.";
+    const hy = s.heatmap_years;                                    // anos usados (JSON novo); o JSON antigo não os tem
+    const scope = hy && hy.length ? `It only uses the years with more than 1,000 h of music (${hy.join(", ")}) and counts every day in that period, including days without music,` : `It counts every day since ${s.first_year}, including days without music,`;      // texto da linha de detalhe, antes de escolher um quadrado
 
     // linha de cima: todas as horas existem (para poder destacar a escolhida), mas só de 3 em 3 ficam visíveis
     let html = '<div class="heatmap reveal" role="img" aria-label="Heatmap of the average minutes of music I listen to, by weekday and hour">';
@@ -159,13 +179,14 @@ document.addEventListener("DOMContentLoaded", () => {              // "quando a 
       html += row.map((v, h) => `<i class="heatmap__cell" data-level="${level(v)}" data-d="${d}" data-h="${h}" style="--delay:${(d + h) * 16}ms"></i>`).join("");
       html += `<span class="heatmap__total">${dayHours(row)}</span></div>`; // total médio do dia à direita
     });
-    const peakHour = s.by_hour.indexOf(Math.max(...s.by_hour));    // posição do maior valor = hora de pico
+    const hourTotals = Array.from({ length: 24 }, (_, h) => grid.reduce((sum, row) => sum + row[h], 0)); // soma de cada hora nos 7 dias (só os anos do mapa)
+    const peakHour = hourTotals.indexOf(Math.max(...hourTotals));  // posição do maior valor = hora de pico
     html += `</div>
       <div class="heatmap__info">
         <div class="heatmap__readout">${hint}</div>
         <div class="heatmap__legend"><span>Less</span><span class="heatmap__scale">${[1, 2, 3, 4, 5].map((n) => `<i data-level="${n}"></i>`).join("")}</span><span>More</span></div>
       </div>
-      <p class="heatmap__summary">Peak hour: <b>${pad(peakHour)}:00</b>. Each square is how many minutes of music I listen to, on average, in that hour of that weekday (Lisbon time). It counts every day since ${s.first_year}, including days without music, so the busiest hour of all averages ${minutes(max)} min. Colours are relative: each shade covers about a fifth of the squares. The column on the right is the average total per day.</p></div>`;
+      <p class="heatmap__summary">Peak hour: <b>${pad(peakHour)}:00</b>. Each square is how many minutes of music I listen to, on average, in that hour of that weekday (Lisbon time). ${scope} so the busiest hour of all averages ${minutes(max)} min. Colours are relative: each shade covers about a fifth of the squares. The column on the right is the average total per day.</p></div>`;
     $("music-heatmap").innerHTML = html;                           // mete tudo na página
 
     // ---- interação: o quadrado cresce (CSS) e esta função escreve o detalhe por baixo ----
@@ -193,25 +214,87 @@ document.addEventListener("DOMContentLoaded", () => {              // "quando a 
     reveal($("music-heatmap"));                                    // arranca a animação de entrada
   }
 
-  // "Donut": um círculo cuja volta se vai preenchendo até à percentagem pedida
-  function donut(pct, label) {
-    const r = 26, c = 2 * Math.PI * r;                             // raio e perímetro do círculo (2·π·r)
-    return `<div class="stat-card donut reveal">
-      <svg viewBox="0 0 64 64"><circle class="donut__track" cx="32" cy="32" r="${r}"/><circle class="donut__value" cx="32" cy="32" r="${r}" style="--c:${c.toFixed(1)}; --p:${pct}"/></svg>
-      <div><strong>${pct}%</strong><span>${label}</span></div></div>`;
+  // ---------- unidades de tempo: h · min / min / days ----------
+  const UNITS = ["hm", "min", "d"];                                // as 3 formas de mostrar um tempo
+  const UNIT_LABEL = { hm: "h · min", min: "min", d: "days" };     // texto dos botões e dos chips
+  const fmtDate = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); // "29 Sept 2026"
+  // devolve o tempo como lista de [número, unidade]; ex.: 996 min em "hm" -> [["16","h"],["36","min"]]
+  function timeParts(minutes, unit) {
+    minutes = Math.round(minutes);                                 // trabalhamos sempre com minutos inteiros
+    if (unit === "min") return [[fmt(minutes), "min"]];
+    if (unit === "d") return [[(minutes / 1440).toFixed(2), "days"]];
+    const h = Math.floor(minutes / 60), m = minutes - h * 60;      // horas inteiras + minutos que sobram
+    if (!h) return [[String(m), "min"]];
+    return m ? [[fmt(h), "h"], [String(m), "min"]] : [[fmt(h), "h"]];
+  }
+  const timeText = (minutes, unit) => timeParts(minutes, unit).map(([v, u]) => `${v} ${u}`).join(" "); // "16 h 36 min"
+  const SWAP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/></svg>'; // ícone ⇄ do chip
+
+  // Conteúdo de um cartão de tempo: legenda + chip da unidade + valor + equivalências exatas + nota
+  function timeCard(t, unit) {
+    const value = timeParts(t.minutes, unit).map(([v, u]) => `${v}<em>${u}</em>`).join(" ");
+    const others = UNITS.filter((u) => u !== unit).map((u) => timeText(t.minutes, u)).join(" · "); // as outras duas unidades
+    return `<span>${esc(t.label)}</span>
+      <button type="button" class="unit-chip" data-key="${t.key}" aria-label="Change the unit of this card">${SWAP}${UNIT_LABEL[unit]}</button>
+      <strong>${value}</strong><small>= ${others}</small><small>${esc(t.note)}</small>`;
   }
 
-  function habits(s) {                                             // 2 donuts + 4 curiosidades
-    const day = new Date(s.busiest_day.date + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); // "29 Sept 2026"
-    const boxes = [
-      [s.longest_streak_days + " days", "longest daily streak"],
-      [s.busiest_day.hours + " h", "busiest day, " + day],
-      [s.avg_hours_per_active_day + " h", "per day I listen"],
-      [fmt(s.active_days), "days with music"],
+  // "Donut": um círculo cuja volta se vai preenchendo até à percentagem pedida (+ uma linha com o valor absoluto)
+  function donut(pct, label, detail) {
+    const r = 26, c = 2 * Math.PI * r;                             // raio e perímetro do círculo (2·π·r)
+    return `<div class="donut__row">
+      <svg viewBox="0 0 64 64"><circle class="donut__track" cx="32" cy="32" r="${r}"/><circle class="donut__value" cx="32" cy="32" r="${r}" style="--c:${c.toFixed(1)}; --p:${pct}"/></svg>
+      <div><strong>${pct}%</strong><span>${label}</span>${detail ? `<small>${detail}</small>` : ""}</div></div>`;
+  }
+
+  function habits(s) {                                             // 3 tempos (com seletor de unidade) + 2 curiosidades + skips/shuffle
+    const times = [
+      { key: "avg", label: "per day I listen", minutes: s.avg_minutes_per_active_day ?? s.avg_hours_per_active_day * 60, note: `${fmt(s.total_hours)} h ÷ ${fmt(s.active_days)} days with music` },
+      { key: "peak", label: "busiest day", minutes: s.busiest_day.minutes ?? s.busiest_day.hours * 60, note: fmtDate(s.busiest_day.date) },
+      { key: "total", label: `listened since ${s.first_year}`, minutes: s.total_minutes ?? s.total_hours * 60, note: `${fmt(s.total_plays)} plays` },
     ];
-    $("music-facts").innerHTML = donut(s.skip_rate, "of tracks skipped") + donut(s.shuffle_rate, "played on shuffle") +
-      boxes.map(([v, label]) => `<div class="stat-card"><strong>${esc(v)}</strong><span>${esc(label)}</span></div>`).join(""); // junta donuts e cartões
-    reveal($("music-facts"));                                      // anima os donuts quando aparecerem
+    const boxes = [[s.longest_streak_days + " days", "longest daily streak"], [fmt(s.active_days), "days with music"]];
+    const skipInfo = s.skipped_plays === undefined ? "" : `${fmt(s.skipped_plays)} of ${fmt(s.total_attempts)} tracks started`; // JSON antigo: sem esta linha
+    const shuffleInfo = s.shuffled_plays === undefined ? "" : `${fmt(s.shuffled_plays)} of ${fmt(s.total_plays)} plays`;
+    const box = $("music-facts");
+    box.innerHTML = times.map((t) => `<div class="stat-card stat-card--time" data-card="${t.key}"></div>`).join("") +
+      boxes.map(([v, label]) => `<div class="stat-card"><strong>${esc(v)}</strong><span>${esc(label)}</span></div>`).join("") +
+      `<div class="stat-card donut donut-pair reveal">${donut(s.skip_rate, "of tracks skipped", skipInfo)}${donut(s.shuffle_rate, "played on shuffle", shuffleInfo)}</div>`;
+
+    // estado: unidade global + unidade própria de cada cartão (quando se clica no chip)
+    let global = "hm";
+    const own = {};
+    const unitOf = (key) => own[key] || global;
+    const paintCard = (t) => { box.querySelector(`[data-card="${t.key}"]`).innerHTML = timeCard(t, unitOf(t.key)); };
+    times.forEach(paintCard);
+
+    // barra com o seletor global (criada aqui, por isso o music.md não precisa de mudar)
+    let bar = $("music-unit-bar");
+    if (!bar) {
+      box.insertAdjacentHTML("beforebegin", `<div class="unit-bar" id="music-unit-bar" role="group" aria-label="Time unit"><span>Show time as</span>
+        <div class="unit-seg">${UNITS.map((u) => `<button type="button" data-unit="${u}">${UNIT_LABEL[u]}</button>`).join("")}</div>
+        <small>Use the chip on a card to change just that one.</small></div>`);
+      bar = $("music-unit-bar");
+    }
+    const paintBar = () => bar.querySelectorAll("[data-unit]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.unit === global)));
+    bar.onclick = (e) => {                                         // onclick (e não addEventListener) para nunca empilhar ouvintes
+      const b = e.target.closest("[data-unit]");
+      if (!b) return;
+      global = b.dataset.unit;
+      Object.keys(own).forEach((k) => delete own[k]);              // a escolha global limpa as escolhas por cartão
+      paintBar();
+      times.forEach(paintCard);
+    };
+    box.onclick = (e) => {
+      const chip = e.target.closest(".unit-chip");
+      if (!chip) return;
+      const t = times.find((x) => x.key === chip.dataset.key);
+      own[t.key] = UNITS[(UNITS.indexOf(unitOf(t.key)) + 1) % UNITS.length]; // h·min -> min -> days -> h·min
+      paintCard(t);
+      box.querySelector(`.unit-chip[data-key="${t.key}"]`).focus(); // o cartão foi redesenhado: devolve o foco ao chip (teclado)
+    };
+    paintBar();
+    reveal(box);                                                   // anima os donuts quando aparecerem
   }
 
   // Disco de vinil desenhado em SVG: é a capa "de reserva" quando ainda não há (ou não carrega) a imagem verdadeira
@@ -255,7 +338,12 @@ document.addEventListener("DOMContentLoaded", () => {              // "quando a 
     }
   }
 
-  async function playlists() {                                     // mostra as playlists do Spotify em cartões
+  // Altura do leitor do Spotify = cabeçalho + uma linha por faixa, para a lista aparecer toda sem scroll.
+  // Se a playlist for muito comprida, o leitor tem scroll próprio a partir do máximo. Ajusta estes números à vontade.
+  const PLAYER_MIN = 352, PLAYER_MAX = 720, PLAYER_HEADER = 96, PLAYER_ROW = 56;
+  const playerHeight = (n) => Math.min(PLAYER_MAX, Math.max(PLAYER_MIN, PLAYER_HEADER + (n || 0) * PLAYER_ROW));
+
+  async function playlists() {                                     // mostra as playlists: capa à esquerda, lista de faixas logo ao lado
     const box = $("music-playlists");                              // a <div> onde vão aparecer (o prefixo "music-" evita colidir com o id que o MkDocs dá ao título "Playlists")
     const heading = box.previousElementSibling;                    // o título "Playlists" mesmo antes da div
     try {                                                          // tenta carregar...
@@ -263,54 +351,29 @@ document.addEventListener("DOMContentLoaded", () => {              // "quando a 
       const list = resp.ok ? await resp.json() : [];               // se correu bem lê o JSON, senão usa lista vazia
       if (!list.length) throw new Error("empty");                  // lista vazia = salta para o catch
 
-      // cada playlist vira um cartão; a cor muda de cartão para cartão (hue = matiz, 0 a 360)
+      // cada playlist vira um cartão largo: informação à esquerda, leitor do Spotify (com todas as faixas) à direita. Sem botões.
       box.innerHTML = list.map((p, i) => `
-        <article class="playlist" style="--hue:${(170 + i * 70) % 360}">
-          <div class="playlist__cover">
+        <article class="playlist" style="--hue:${(170 + i * 70) % 360}; --player-h:${playerHeight(p.track_count)}px">
+          <div class="playlist__info">
             <div class="playlist__art">${VINYL}</div>
             <div class="playlist__text">
               <strong class="playlist__title">${esc(p.title)}</strong>
               <p class="playlist__desc">${esc(p.description || "")}</p>
-              ${p.track_count ? `<span class="playlist__tracks">${fmt(p.track_count)} tracks</span>` : ""}
+              <div class="playlist__meta">
+                ${p.track_count ? `<span class="playlist__tracks">${fmt(p.track_count)} tracks</span>` : ""}
+                <a class="playlist__link" href="https://open.spotify.com/playlist/${encodeURIComponent(p.id)}" target="_blank" rel="noopener">Open in Spotify ↗</a>
+              </div>
             </div>
           </div>
-          <div class="playlist__body">
-            <button type="button" class="playlist__button" aria-expanded="false" data-id="${esc(p.id)}" data-title="${esc(p.title)}">Play here</button>
-            <a class="playlist__link" href="https://open.spotify.com/playlist/${encodeURIComponent(p.id)}" target="_blank" rel="noopener">Open in Spotify</a>
+          <div class="playlist__player">
+            <iframe title="${esc(p.title)}" loading="lazy"
+              src="https://open.spotify.com/embed/playlist/${encodeURIComponent(p.id)}?utm_source=generator&theme=0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
           </div>
-          <div class="playlist__player" hidden></div>
         </article>`).join("");
 
-      // as capas carregam em segundo plano: a página aparece logo com o vinil e cada capa entra quando chegar
+      // as capas carregam em segundo plano: a página aparece logo com o vinil e cada capa (e o fundo desfocado) entra quando chegar
       Array.from(box.children).forEach((card, i) => loadCover(card, list[i]));
-
-      // fechar um leitor: esconde a caixa e APAGA o iframe (apagar o iframe também pára a música)
-      const close = (button) => {
-        const player = button.closest(".playlist").querySelector(".playlist__player"); // a caixa do leitor deste cartão
-        player.hidden = true;                                      // esconde-a
-        player.innerHTML = "";                                     // apaga o iframe lá de dentro
-        button.setAttribute("aria-expanded", "false");             // avisa leitores de ecrã que está fechado
-        button.textContent = "Play here";                          // o botão volta ao texto inicial
-      };
-
-      // um único "ouvinte" para a caixa toda: reage a cliques em qualquer botão (delegação de eventos)
-      // usamos onclick (e não addEventListener) para nunca ficarem dois ouvintes empilhados na mesma caixa
-      box.onclick = (e) => {
-        const button = e.target.closest(".playlist__button");      // o clique foi num botão destes? (senão é null)
-        if (!button) return;                                       // se não foi, ignora
-        const wasOpen = button.getAttribute("aria-expanded") === "true"; // este leitor já estava aberto?
-        box.querySelectorAll(".playlist__button[aria-expanded='true']").forEach(close); // fecha todos (assim só toca uma playlist de cada vez)
-        if (wasOpen) return;                                       // se estava aberto, ficou fechado e acabou
-        const player = button.closest(".playlist").querySelector(".playlist__player"); // a caixa do leitor deste cartão
-        // o iframe só é criado agora, ao clicar: a página carrega mais depressa e não gasta dados à toa
-        // theme=0 = leitor escuro do Spotify
-        player.innerHTML = `<iframe title="${esc(button.dataset.title)}"
-          src="https://open.spotify.com/embed/playlist/${encodeURIComponent(button.dataset.id)}?utm_source=generator&theme=0"
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
-        player.hidden = false;                                     // mostra a caixa
-        button.setAttribute("aria-expanded", "true");              // marca como aberto
-        button.textContent = "Close player";                       // o botão passa a fechar
-      };
     } catch {                                                      // se algo falhou ou não há playlists...
       box.hidden = true;                                           // ...esconde a caixa
       if (heading && heading.tagName === "H2") heading.hidden = true; // ...e o título também
@@ -324,7 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {              // "quando a 
     $("music-intro").innerHTML = `Since <b>${s.first_year}</b> I've listened to <b>${fmt(s.total_hours)} hours</b> of music on Spotify. That's about <b>${fmt(s.total_hours / 24)} days</b> non-stop.`; // frase de abertura
     // cada secção corre "isolada": se uma falhar, as outras continuam a aparecer
     const sections = [cards, timeline, artists, tracks, years, heatmap, habits, playlists]; // a ordem em que aparecem
-    const data = [s, s.by_month, s.top_artists, s.top_tracks, s.by_year, s, s, s];          // o que cada função recebe
+    const data = [s, s.by_month, s.top_artists, s.top_tracks, s, s, s, s];          // o que cada função recebe
     sections.forEach((section, k) => {                             // para cada secção...
       try { section(data[k]); }                                    // ...tenta desenhá-la
       catch (error) { console.error("Section " + section.name + " failed:", error); } // ...se falhar, escreve o erro na consola (F12) e segue

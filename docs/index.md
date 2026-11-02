@@ -1,23 +1,29 @@
-# Diogo's Portfolio
+---
+hide:
+  - navigation
+  - toc
+---
 
-![Diogo](assets/photos/me.jpg){ align=right width=240 }
+<img class="avatar" src="assets/photos/me-small.jpg" alt="Diogo Araújo">
 
-Hi, I'm **Diogo Araújo**, a software developer from Vila Nova de Famalicão,
-Portugal. I work at **MVF Software**, building gym and sports management
-software with Delphi, from the server and database all the way to the screens
-people tap on.
+# Diogo Araújo
 
-I studied Computer Systems Engineering, and I started out in Digital Games
-Development before that. These days I'm also drawn back to where it all began:
-I'm working on ideas for a game of my own.
+Software developer from Vila Nova de Famalicão, Portugal. I build gym management software at MVF Software, from the server and the database to the screens people tap on. Lately I'm most interested in automation, AI and tools that make developers faster.
 
-This site is built with MkDocs and the Material theme, customised with my own
-CSS and JavaScript. Have a look around:
+## Now
 
-- **[About](about.md)**: who I am, what I do and where I'm heading
-- **[Projects](projects.md)**: things I've built, at work, at university and on my own
-- **[Music](music.md)**: my Spotify listening habits, as data
-- **[Photography](photography.md)**: a few frames I like
+- Building new features for gym software at MVF Software
+- Working on a machine learning model that predicts which members might leave
+- Learning more Python and CI/CD
+- Helping a friend make a video game
 
-You can also find me on [LinkedIn](https://www.linkedin.com/in/diogo-araújo-414616341/)
-and [GitHub](https://github.com/Diogo110).
+## On this site
+
+- [Projects](projects.md): things I've built, at work and on my own
+- [About](about.md): how I got here and what I know
+- [Music](music.md): my Spotify listening habits, as data
+- [Photography](photography.md): a few frames I like
+
+## Contact
+
+[LinkedIn](https://www.linkedin.com/in/diogo-araújo-414616341/) · [GitHub](https://github.com/Diogo110) · [diogoaraujo110@gmail.com](mailto:diogoaraujo110@gmail.com)

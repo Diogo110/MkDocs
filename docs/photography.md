@@ -1,6 +1,12 @@
+---
+hide:
+  - navigation
+  - toc
+---
+
 # Photography
 
-<p class="gallery-intro">A few frames I like. Click a photo to open it, use the arrow keys to move between them.</p>
+<p class="gallery-intro">A few frames I like. Click a photo to see it full size.</p>
 
 <div id="gallery-filtros" class="gallery-filtros"></div>
 

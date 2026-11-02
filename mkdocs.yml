@@ -22,8 +22,11 @@ theme:
         icon: material/weather-sunny
         name: Modo claro
 
+hooks:
+  - hooks/reading_time.py
+
 markdown_extensions:
-  - attr_list # permite { align=right width=220 } nas imagens
+  - attr_list
 
 nav:
   - Home: index.md

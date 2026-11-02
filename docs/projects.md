@@ -1,65 +1,88 @@
+---
+hide:
+  - navigation
+  - toc
+---
+
 # Projects
 
-## Member self-service kiosk
+Things I've built at work, during my internship and on my own.
 
-*Delphi, FireMonkey, DataSnap, Aurelius ORM. MVF Software, 2025 to now.*
+## At MVF Software
 
-A self-service kiosk for gym members, part of the company's software. I
-designed and built it on my own, from scratch, including the touch interface,
-the on-screen keyboard and the server side behind it.
+<div class="rows">
+  <div class="row">
+    <span class="row__when">2025 – now</span>
+    <div>
+      <h3>Member self-service kiosk</h3>
+      <p>A touch kiosk where gym members sign up, choose a plan and pay on their own. I designed and built it from scratch, including the interface, the on-screen keyboard and the server side behind it.</p>
+      <p class="row__tech">Delphi · FireMonkey · DataSnap · Aurelius ORM</p>
+    </div>
+  </div>
+  <div class="row">
+    <span class="row__when">2025 – now</span>
+    <div>
+      <h3>AI and machine learning</h3>
+      <p>My first project at MVF was integrating AI into the company's software. I also implemented the machine learning integration, both on my own.</p>
+      <p class="row__tech">AI · Machine learning · Python</p>
+    </div>
+  </div>
+  <div class="row">
+    <span class="row__when">2025 – now</span>
+    <div>
+      <h3>Gym management software</h3>
+      <p>The product I work on every day: features across the full stack, third-party API integrations, and new versions as feedback comes in.</p>
+      <p class="row__tech">Delphi · REST APIs · Firebird</p>
+    </div>
+  </div>
+</div>
 
-## AI and machine learning in the gym software
+## Internship and university
 
-*MVF Software, 2025 to now.*
+<div class="rows">
+  <div class="row">
+    <span class="row__when">2024</span>
+    <div>
+      <h3>Restart on Crash tool</h3>
+      <p>The final challenge of my internship at Edigma: a tool that watches running programs and restarts them after a failure, with a task manager, remote control and logging.</p>
+      <p class="row__tech">C++</p>
+    </div>
+  </div>
+  <div class="row">
+    <span class="row__when">2024</span>
+    <div>
+      <h3>Side-scrolling game</h3>
+      <p>A challenging side-scrolling game in the style of Flappy Bird, also at Edigma.</p>
+      <p class="row__tech">Qt · QML · JavaScript</p>
+    </div>
+  </div>
+  <div class="row">
+    <span class="row__when">2023</span>
+    <div>
+      <h3>UniHome</h3>
+      <p>A student residence management project, made during my degree.</p>
+      <p class="row__tech">Kotlin · Node.js · Express · SQL Server</p>
+    </div>
+  </div>
+</div>
 
-My first project at MVF was integrating AI into the company's software. I also
-implemented the machine learning integration, and I did both of them
-independently.
+## On my own
 
-## Gym and sports management software
-
-*Delphi, REST APIs, DataSnap, Aurelius ORM, Firebird. MVF Software, 2025 to now.*
-
-The product I work on every day. I build features across the full stack: server
-modules and databases, REST and DataSnap services, ViewModels and user
-interfaces, plus integrations with third-party APIs. I test my own work and
-release updated versions as feedback comes in.
-
-## Restart on Crash tool
-
-*C++. Edigma internship, 2024.*
-
-The final challenge of my internship: a tool that watches running programs and
-restarts them automatically after a failure. It has a task manager, remote
-control of one computer from another, and a logging system. It's the project
-where I used C++.
-
-## Side-scrolling game in Qt
-
-*QML, JavaScript, Qt. Edigma internship, 2024.*
-
-A challenging side-scrolling game in the style of Flappy Bird, built with QML
-and JavaScript.
-
-## UniHome
-
-*Kotlin, Node.js, Express, SQL Server. University project, 2023.*
-
-A student residence management project, made during my degree.
-
-## This portfolio
-
-*MkDocs Material, CSS, JavaScript, Python.*
-
-Built with MkDocs Material, with a custom theme and my own CSS and JavaScript.
-The **Music** page is drawn from my own Spotify streaming history: a Python
-script turns the export into a small JSON file, and the page draws the charts,
-the heatmap and the playlists with plain HTML, SVG and CSS.
-
-## A game of my own
-
-*In progress.*
-
-My next big project, and a return to my origins. I'm designing the levels,
-writing the story, exploring ideas for new mechanics and drawing the art. When
-there's something playable, it will be here.
+<div class="rows">
+  <div class="row">
+    <span class="row__when">2026</span>
+    <div>
+      <h3>This portfolio</h3>
+      <p>MkDocs Material with my own CSS and JavaScript. The Music page is drawn from my Spotify history by a Python script, and a small MkDocs hook I wrote adds the reading time to longer pages.</p>
+      <p class="row__tech">MkDocs · Python · JavaScript · CSS</p>
+    </div>
+  </div>
+  <div class="row">
+    <span class="row__when">Now</span>
+    <div>
+      <h3>A game of my own</h3>
+      <p>A return to my origins. I'm designing the levels, writing the story, exploring new mechanics and drawing the art. When there's something playable, it will be here.</p>
+      <p class="row__tech">Game design · Pixel art · Unity</p>
+    </div>
+  </div>
+</div>

@@ -8,7 +8,7 @@ hide:
 
 # Diogo Araújo
 
-Software developer from Vila Nova de Famalicão, Portugal. I build gym management software at MVF Software, from the server and the database to the screens people tap on. Lately I'm most interested in automation, AI and tools that make developers faster.
+Software developer from Vila Nova de Famalicão, Portugal. I build gym management software at MVF Software, from the server and the database to the screens people tap on.
 
 ## Now
 
